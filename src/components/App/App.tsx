@@ -9,7 +9,7 @@ import NoteList from "../NoteList/NoteList";
 import Loader from "../Loader/Loader";
 import Modal from "../Modal/Modal";
 import NoteForm from "../NoteForm/NoteForm";
-import { fetchNotes, createNote } from "../../services/noteService";
+import { fetchNotes, createNote, deleteNote } from "../../services/noteService";
 import type { FetchNotesResponse } from "../../services/noteService";
 
 export default function App() {
@@ -30,7 +30,7 @@ export default function App() {
     retry: 1,
   });
 
-  const mutation = useMutation({
+  const createMutation = useMutation({
     mutationFn: createNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
@@ -38,6 +38,16 @@ export default function App() {
     },
     onError: (error) => {
       console.error("Mutation error:", error);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+    onError: (error) => {
+      console.error("Delete error:", error);
     },
   });
 
@@ -51,7 +61,7 @@ export default function App() {
   };
 
   const handleDelete = (id: string) => {
-    console.log("Delete note with id:", id);
+    deleteMutation.mutate(id);
   };
 
   const handleOpenModal = () => {
@@ -92,10 +102,10 @@ export default function App() {
       {data && data.notes && data.notes.length === 0 && !isLoading && (
         <p>No notes found.</p>
       )}
-      <Modal isOpen={isModalOpen}>
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
         <NoteForm
           onSubmitSuccess={handleCloseModal}
-          onSubmit={mutation.mutate}
+          onSubmit={createMutation.mutate}
         />
       </Modal>
     </div>

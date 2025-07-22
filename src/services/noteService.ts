@@ -1,81 +1,76 @@
 import axios from "axios";
-import { type Note } from "../types/note";
+import type { Note } from "../types/note";
 
-const noteApi = axios.create({
-  baseURL: "https://notehub-public.goit.study/api",
-  headers: {
-    Authorization: `Bearer ${import.meta.env.VITE_NOTEHUB_TOKEN}`,
-  },
-});
+const API_BASE_URL = "https://notehub-public.goit.study/api";
+const TOKEN = import.meta.env.VITE_NOTEHUB_TOKEN;
 
 export interface FetchNotesResponse {
   notes: Note[];
   totalPages: number;
 }
 
-export async function fetchNotes(
-  page: number = 1,
-  perPage: number = 10,
+export const fetchNotes = async (
+  page: number,
+  perPage: number,
   search: string = ""
-): Promise<FetchNotesResponse> {
+): Promise<FetchNotesResponse> => {
   try {
     const params: { page: number; perPage: number; search?: string } = {
       page,
       perPage,
     };
-    if (search.trim()) {
-      params.search = search.trim();
+    if (search) {
+      params.search = search;
     }
-    const response = await noteApi.get<FetchNotesResponse>("/notes", {
+    const response = await axios.get(`${API_BASE_URL}/notes`, {
       params,
+      headers: { Authorization: `Bearer ${TOKEN}` },
     });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error("Axios error fetching notes:", error.message);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-      }
-    } else {
-      console.error("Unexpected error fetching notes:", error);
+      console.error("Fetch notes error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
     }
-    throw new Error("Failed to fetch notes");
+    throw error;
   }
-}
+};
 
-export async function createNote(note: Omit<Note, "id">): Promise<Note> {
+export const createNote = async (note: Omit<Note, "id">): Promise<Note> => {
   try {
-    const response = await noteApi.post<Note>("/notes", note);
+    const response = await axios.post(`${API_BASE_URL}/notes`, note, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error("Axios error creating note:", error.message);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-      }
-    } else {
-      console.error("Unexpected error creating note:", error);
+      console.error("Create note error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
     }
-    throw new Error("Failed to create note");
+    throw error;
   }
-}
+};
 
-export async function deleteNote(id: string): Promise<Note> {
+export const deleteNote = async (id: string): Promise<Note> => {
   try {
-    const response = await noteApi.delete<Note>(`/notes/${id}`);
+    const response = await axios.delete(`${API_BASE_URL}/notes/${id}`, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error("Axios error deleting note:", error.message);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-      }
-    } else {
-      console.error("Unexpected error deleting note:", error);
+      console.error("Delete note error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
     }
-    throw new Error("Failed to delete note");
+    throw error;
   }
-}
+};
