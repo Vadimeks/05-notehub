@@ -3,7 +3,6 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import css from "./NoteForm.module.css";
 import { createNote } from "../../services/noteService";
-import type { Note } from "../../types/note";
 
 interface NoteFormProps {
   onClose: () => void;
