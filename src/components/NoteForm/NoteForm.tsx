@@ -1,29 +1,39 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import css from "./NoteForm.module.css";
+import { createNote } from "../../services/noteService";
+import type { Note } from "../../types/note";
 
 interface NoteFormProps {
-  onSubmitSuccess: () => void;
-  onSubmit: (values: {
-    title: string;
-    content: string;
-    tag: "Todo" | "Work" | "Personal" | "Meeting" | "Shopping";
-  }) => void;
+  onClose: () => void;
 }
 
 const validationSchema = Yup.object({
   title: Yup.string()
     .required("Title is required")
-    .min(3, "Title must be at least 3 characters"),
-  content: Yup.string()
-    .required("Content is required")
-    .min(5, "Content must be at least 5 characters"),
+    .min(3, "Title must be at least 3 characters")
+    .max(50, "Title must be at most 50 characters"),
+  content: Yup.string().max(500, "Content must be at most 500 characters"),
   tag: Yup.string()
     .required("Tag is required")
     .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"], "Invalid tag"),
 });
 
-export default function NoteForm({ onSubmitSuccess, onSubmit }: NoteFormProps) {
+export default function NoteForm({ onClose }: NoteFormProps) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      onClose();
+    },
+    onError: (error) => {
+      console.error("Create note error:", error);
+    },
+  });
+
   return (
     <Formik
       initialValues={{
@@ -33,15 +43,9 @@ export default function NoteForm({ onSubmitSuccess, onSubmit }: NoteFormProps) {
       }}
       validationSchema={validationSchema}
       onSubmit={async (values, { setSubmitting, resetForm }) => {
-        try {
-          onSubmit(values);
-          resetForm();
-          onSubmitSuccess();
-        } catch (error) {
-          console.error("Error creating note:", error);
-        } finally {
-          setSubmitting(false);
-        }
+        await mutation.mutateAsync(values);
+        resetForm();
+        setSubmitting(false);
       }}
     >
       {({ isSubmitting }) => (
@@ -89,7 +93,7 @@ export default function NoteForm({ onSubmitSuccess, onSubmit }: NoteFormProps) {
             <button
               type="button"
               className={css.cancelButton}
-              onClick={onSubmitSuccess}
+              onClick={onClose}
             >
               Cancel
             </button>
