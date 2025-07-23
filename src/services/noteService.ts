@@ -22,10 +22,13 @@ export const fetchNotes = async (
     if (search) {
       params.search = search;
     }
-    const response = await axios.get(`${API_BASE_URL}/notes`, {
-      params,
-      headers: { Authorization: `Bearer ${TOKEN}` },
-    });
+    const response = await axios.get<FetchNotesResponse>(
+      `${API_BASE_URL}/notes`,
+      {
+        params,
+        headers: { Authorization: `Bearer ${TOKEN}` },
+      }
+    );
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -39,9 +42,11 @@ export const fetchNotes = async (
   }
 };
 
-export const createNote = async (note: Omit<Note, "id">): Promise<Note> => {
+export const createNote = async (
+  note: Omit<Note, "id" | "createdAt" | "updatedAt">
+): Promise<Note> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/notes`, note, {
+    const response = await axios.post<Note>(`${API_BASE_URL}/notes`, note, {
       headers: { Authorization: `Bearer ${TOKEN}` },
     });
     return response.data;
@@ -57,9 +62,9 @@ export const createNote = async (note: Omit<Note, "id">): Promise<Note> => {
   }
 };
 
-export const deleteNote = async (id: string): Promise<Note> => {
+export const deleteNote = async (id: number): Promise<Note> => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/notes/${id}`, {
+    const response = await axios.delete<Note>(`${API_BASE_URL}/notes/${id}`, {
       headers: { Authorization: `Bearer ${TOKEN}` },
     });
     return response.data;
